@@ -14,14 +14,19 @@ CLASS_NAMES = ["NMI", "MYCN", "CLUSTER"]
 class Range:
     """like builtin range, but when sliced gives a list"""
     __slots__ = "_range"
+    
     def __init__(self, *args):
         self._range = range(*args) # takes no keyword arguments.
+        
     def __getattr__(self, name):
         return getattr(self._range, name)
+    
     def __getitem__(self, subscript):
         result = self._range.__getitem__(subscript)
+        
         if isinstance(subscript, slice):
             return list(result)
+        
         else:
             return result
 

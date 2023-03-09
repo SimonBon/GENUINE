@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+import h5py
 
 from tqdm                   import tqdm
 from tifffile               import imread
@@ -36,9 +37,7 @@ def segment_images(image_dir, sample, n_files, model_kwargs, diameter):
                                             
     np.random.shuffle(files_list)
     files_list = files_list[:n_files]
-    
-    print(files_list)
-        
+            
     images = [imread(x) for x in files_list]
     dapis = [im[..., 2] for im in images]
 
@@ -51,41 +50,55 @@ def segment_images(image_dir, sample, n_files, model_kwargs, diameter):
     return masks, images
 
 
-def Images2H5(image_dir, model_kwargs, sample, diameter=70, n_files=10, patch_sz=64, ret_masks=False):
+def Images2H5(image_dir, model_kwargs, out_dir, sample=None, diameter=70, n_files=10, patch_sz=None, create_h5=True):
     
-    masks, images = segment_images(image_dir, sample, n_files, model_kwargs, diameter)
-    
-    patch_sz = int(patch_sz)
-    
-    return_patches = []
-    return_masks = []
-    for mask, image in zip(masks, images):
+    if isinstance(sample, type(None)):
+        samples = np.unique([x.split("_")[0] for x in os.listdir(image_dir)])
+    elif isinstance(sample, str):
+        samples = [sample]
+    elif isinstance(sample, list):
+        samples = sample
+    else:
+        raise Exception()
         
+    masks, images, s = [], [], []
+    for sample in samples:
+    
+        m, i = segment_images(image_dir, sample, n_files, model_kwargs, diameter)
+        masks.extend(m)
+        images.extend(i)
+        s.extend([sample]*len(m))
+         
+    return_dict = {}
+    for mask, image, sample in zip(masks, images, s):
+                
         normed = normalize_image(image, mask)
         centers = get_extractable_cells(mask, patch_sz)
-        if ret_masks:
-            patches, masks = extract_patches(centers, normed, mask, patch_sz, ret_masks=ret_masks)
-            return_patches.extend(patches)
-            return_masks.extend(masks)
+        patches, masks = extract_patches(centers, normed, mask, int(patch_sz))
+        
+        if sample in return_dict:
+            return_dict[sample][0].extend(patches)
+            return_dict[sample][1].extend(masks)
+            
         else:
-            patches = extract_patches(centers, normed, mask, patch_sz, ret_masks=ret_masks)
-            return_patches.extend(patches)
+            return_dict[sample] = [patches, masks]
 
-    if ret_masks:
-        return (np.array(return_patches), np.array(return_masks))
+    with h5py.File(out_dir, "w") as f:
+
+        for k, v in return_dict.items():
+            
+            group_name = k[:-1] if "_" in k else k
+            
+            g = f.create_group(group_name)
+            g.create_dataset("X", data=return_dict[k][0])
+            g.create_dataset("y", data=np.zeros(len(return_dict[k][0])))        
     
-    else:
-        return np.array(return_patches)
-        
-        
-    
-def extract_patches(centers, image, mask, patch_sz, ret_masks):
+def extract_patches(centers, image, mask, patch_sz):
     
     excluded = 0
-    patches = []
-    masks = []
+    masks, patches= [], []
     for c in centers:
-        
+            
         patch = image[c[0]-patch_sz:c[0]+patch_sz, c[1]-patch_sz:c[1]+patch_sz].copy()
         mask_patch = mask[c[0]-patch_sz:c[0]+patch_sz, c[1]-patch_sz:c[1]+patch_sz].copy()
         mask_patch[mask_patch != c[2]] = 0
@@ -107,16 +120,12 @@ def extract_patches(centers, image, mask, patch_sz, ret_masks):
             
         patch[background] = 0
         patches.append(patch)
-        
-        if ret_masks:
-            masks.append(mask_patch)
+    
+        masks.append(mask_patch)
         
     print("excluded: ", excluded)
-
-    if ret_masks:
-        return patches, masks
-    else:
-        return patches
+        
+    return patches, masks
 
 def get_extractable_cells(mask: np.ndarray, patch_sz) -> np.ndarray:
     
