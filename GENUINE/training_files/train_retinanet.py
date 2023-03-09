@@ -1,11 +1,11 @@
-from MICCAI.data.datasets import FRCNN_MYCN, DEFAULT_FRCNN_TRANSFORMS
-from MICCAI.utils.data import collate
-from MICCAI.ModelZoo import RetinaNet
-from MICCAI.training.training import train
+from ..data.datasets import FRCNN_MYCN, DEFAULT_FRCNN_TRANSFORMS
+from ..utils.data import collate
+from ..ModelZoo import RetinaNet
+from ..training.training import train
 import torch
 from torch.utils.data import DataLoader
-from MICCAI.data.custom_transforms import ToTensorBoxes
-from MICCAI.data.sampler import custom_sampler
+from ..data.custom_transforms import ToTensorBoxes
+from ..data.sampler import custom_sampler
 
 if __name__ == "__main__":
         
@@ -19,8 +19,8 @@ if __name__ == "__main__":
 
     #train_sampler = custom_sampler(train_set)
 
-    train_loader = DataLoader(train_set, batch_size=16, collate_fn=collate)
-    validation_loader = DataLoader(val_set, batch_size=16, collate_fn=collate)
+    train_loader = DataLoader(train_set, batch_size=16, collate_fn=collate, shuffle=True)
+    validation_loader = DataLoader(val_set, batch_size=16, collate_fn=collate, shuffle=True)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.0005)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.9999)

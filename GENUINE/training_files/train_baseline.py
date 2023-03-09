@@ -1,9 +1,9 @@
-from MICCAI.ModelZoo import Baseline
-from MICCAI.training.training import train
+from ..ModelZoo import Baseline
+from ..training.training import train
 import torch
 from torch.utils.data import DataLoader
-from MICCAI.data.datasets import PatchDataset
-from MICCAI.data.custom_transforms import ToTensor, RandomNoise
+from ..data.datasets import PatchDataset
+from ..data.custom_transforms import ToTensor, RandomNoise
 
 if __name__ == "__main__":
     
@@ -22,4 +22,4 @@ if __name__ == "__main__":
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.9999)
     loss_fn = torch.nn.BCEWithLogitsLoss()
 
-    ret_dict = train(50, model, train_loader, validation_loader, loss_fn, optimizer, patients=10, save_dir="/home/simon_g/MICCAI/results/Baseline", use_gpu=True)
+    ret_dict = train(50, model, train_loader, validation_loader, loss_fn, optimizer, patients=10, save_dir="/home/simon_g//results/Baseline", use_gpu=True)

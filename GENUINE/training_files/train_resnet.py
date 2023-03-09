@@ -1,8 +1,8 @@
-from MICCAI.ModelZoo import ResNet
-from MICCAI.training.training import train
+from ..ModelZoo import ResNet
+from ..training.training import train
 import torch
 from torch.utils.data import DataLoader
-from MICCAI.data.datasets import PatchDataset, DEFAULT_TRANSFORMS
+from ..data.datasets import PatchDataset, DEFAULT_TRANSFORMS
 from torchvision.transforms import ToTensor
 
 if __name__ == "__main__":
