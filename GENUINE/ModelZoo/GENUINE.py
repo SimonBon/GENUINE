@@ -37,7 +37,7 @@ class GENUINE(nn.Module):
         
         self.train()
     
-    def forward(self, X, ret_fs=False, ret_boxes=False):
+    def forward(self, X, ret_fs=False):
         
         encoder_fs = self.encoder(X, ret_fs=True)
         

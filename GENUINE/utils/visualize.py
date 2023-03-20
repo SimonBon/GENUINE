@@ -93,6 +93,7 @@ def gridPlot(ims, labels=None, targets=None, sz=(10,10), vmin=0, vmax=1, save_pa
     fig, axs = plt.subplots(sz[0], sz[1], figsize=(2*sz[1], 2*sz[0]))
     print(len(ims))
     for n, (ax, im) in enumerate(zip(axs.ravel(), ims[:sz[0]*sz[1]])):
+        
         ax.imshow(im, vmin=vmin, vmax=vmax)
         ax.set_xticks([])
         ax.set_yticks([])

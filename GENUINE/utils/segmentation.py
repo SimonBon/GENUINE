@@ -7,8 +7,11 @@ from tqdm                   import tqdm
 from tifffile               import imread
 from .device                 import best_gpu
 from cellpose.models        import CellposeModel
-from utils.image_norm      import normalize_image
+from .image_norm      import normalize_image
 from skimage.segmentation   import expand_labels
+
+#debug
+import matplotlib.pyplot as plt
 
 def get_matching_files(base_dir, match=None):
     
@@ -29,20 +32,20 @@ def get_matching_files(base_dir, match=None):
                     files_list.append(os.path.join(root, name))
                     
     return files_list
-                    
 
-def segment_images(image_dir, sample, n_files, model_kwargs, diameter):
+
+def segment_images(image_dir, sample, n_files, model_kwargs, diameter, norm_image):
 
     files_list = get_matching_files(image_dir, sample)
                                             
     np.random.shuffle(files_list)
     files_list = files_list[:n_files]
             
-    images = [imread(x) for x in files_list]
+    images = [norm_image(imread(x)) for x in files_list]
     dapis = [im[..., 2] for im in images]
 
     model = CellposeModel(**model_kwargs, device=best_gpu())
-    masks, _, _ = model.eval(dapis, diameter, channels=[[0, 0]]*len(images), normalize=True)
+    masks, _, _ = model.eval(dapis, channels=[[0, 0]]*len(images), normalize=True, diameter=diameter)
     
     for m in masks:
         m = expand_labels(m, distance=4)
@@ -50,7 +53,10 @@ def segment_images(image_dir, sample, n_files, model_kwargs, diameter):
     return masks, images
 
 
-def Images2H5(image_dir, model_kwargs, out_dir, sample=None, diameter=70, n_files=10, patch_sz=None, create_h5=True):
+def Images2H5(image_dir, model_kwargs, out_dir, sample=None, diameter=70, n_files=10, patch_sz=None, norm_image=lambda x: x):
+    
+    if isinstance(patch_sz, type(None)):
+          patch_sz = diameter
     
     if isinstance(sample, type(None)):
         samples = np.unique([x.split("_")[0] for x in os.listdir(image_dir)])
@@ -64,7 +70,7 @@ def Images2H5(image_dir, model_kwargs, out_dir, sample=None, diameter=70, n_file
     masks, images, s = [], [], []
     for sample in samples:
     
-        m, i = segment_images(image_dir, sample, n_files, model_kwargs, diameter)
+        m, i = segment_images(image_dir, sample, n_files, model_kwargs, diameter, norm_image=norm_image)
         masks.extend(m)
         images.extend(i)
         s.extend([sample]*len(m))
@@ -155,4 +161,4 @@ def get_extractable_cells(mask: np.ndarray, patch_sz) -> np.ndarray:
 def calc_center(bin):
     
     M = cv2.moments(bin)
-    return M["m10"]/M["m00"], M["m01"]/M["m00"]
+    return M["m01"]/M["m00"], M["m10"]/M["m00"]
