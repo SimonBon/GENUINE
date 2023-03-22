@@ -20,11 +20,14 @@ DEFAULT_CHANNELS = ["red", "green", "blue"]
 
 class PatchDataset(Dataset):
     
-    def __init__(self, dataset_path: Union[os.PathLike, str], dataset: str, channels: list=DEFAULT_CHANNELS, transform: list=DEFAULT_TRANSFORMS, n: int=None, ret_id=False):
+    def __init__(self, dataset_path: Union[os.PathLike, str], dataset: str, channels: list=DEFAULT_CHANNELS, transform: list=DEFAULT_TRANSFORMS, n: int=None, ret_id=False, no_transform=False):
         super().__init__()
         self.dataset_path = dataset_path
         self.dataset = dataset
-        self.transforms = transforms.Compose(transform)
+        if no_transform:
+            self.transforms = transforms.Compose([ToTensor()])
+        else:
+            self.transforms = transforms.Compose(transform)
         self.h5py_file = h5py.File( self.dataset_path, 'r')
         # self._channels = self._check_channels(channels)
         self.n = n

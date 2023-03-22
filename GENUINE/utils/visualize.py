@@ -38,6 +38,7 @@ def bbox_on_image(data, sz=(400,400), ret=False, threshold=None, title=None):
     plt.imshow(im) 
     if not isinstance(title, type(None)):
          plt.title(title)
+    plt.axis("off")
     plt.show()
         
 def add_bbox(im, bbox, label):
