@@ -1,4 +1,3 @@
-```
 ### ⚠️ DISCLAIMER: This repository is not in its finished state. Consider this while using! ⚠️
 
 # GENUINE Project
